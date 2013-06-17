@@ -1,6 +1,5 @@
 #!/usr/bin/python2
 import bwt, mtf, huff
-from bitarray import bitarray # For handling bits
 from collections import Counter
 import struct
 import cPickle
@@ -19,6 +18,29 @@ def load_freqs(f):
         k, v, = struct.unpack(">2H", f.read(4))
         freqs[k] = v
     return freqs
+
+def tobytes(s):
+    """
+    Convert a 01 string to bytes. Pading 0 if needed
+    """
+    pad = (len(s)+7)/8*8-len(s)
+    s = s + '0'*pad
+    result = ''
+    i = 0
+    while i < len(s):
+        result = result + struct.pack("B", int(s[i:i+8], 2))
+        i = i + 8
+    return result
+
+def to01(s):
+    """
+    Convert bytes to 01 string
+    """
+    result = ""
+    for x in s:
+        unpack, = struct.unpack("B", x)
+        result = result + '{0:08b}'.format(unpack)
+    return result
 
 def compress(f, compf, block = None):
     """
@@ -54,7 +76,7 @@ def compress(f, compf, block = None):
             huff_encode = ''.join(huff.encode(mtf_encode, coding))
             #print "huff_encode:\n%r" % huff_encode
             nbits = len(huff_encode)
-            huff_bytes = bitarray(huff_encode).tobytes()
+            huff_bytes = tobytes(huff_encode)
 
             compf.write(struct.pack(">2I", nbits, I))
             dump_freqs(compf, freqs)
@@ -80,9 +102,8 @@ def decompress(compf, f):
         freqs = load_freqs(compf)
         #print freqs
         nbyte = (nbits+7) / 8
-        t = bitarray()
-        t.frombytes(compf.read(nbyte))
-        huff_encode = t.to01()[:nbits]
+
+        huff_encode = to01(compf.read(nbyte))[:nbits]
         #print "huff_encode:\n%r" % huff_encode
         coding, root = huff.generate_coding(freqs)
         #print "coding:\n%r" % coding
