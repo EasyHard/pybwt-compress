@@ -47,6 +47,12 @@ def sort_suffixes(seq):
     return [x[1] for x in sorted_l]
 
 def encode(seq, indexes = None):
+    """
+    Encode a symbol seq via BWT. If indexes is not supplied,
+    a "$" will be appended and sorting of cyclic shifts will
+    change to suffixes sorting.
+    Return: L and I
+    """
     seq = list(seq)
     if indexes == None:
         seq.append('')
@@ -58,6 +64,10 @@ def encode(seq, indexes = None):
 
 import bisect
 def decode(L, I, reverse = False):
+    """
+    Decode the L and I. if reverse if True, the origin symbol sequence
+    will return, otherwise reversed sequence will be returned.
+    """
     L = list(L)
     F = sorted(L)
     T = []
